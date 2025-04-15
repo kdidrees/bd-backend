@@ -1,6 +1,31 @@
 const UserModel = require("../models/userModel");
-const generateOTP = require("../utils/otpUtils");
+const { generateOTP } = require("../utils/otpUtils");
 const sendOTPViaSMS = require("../utils/smsUtils");
+
+exports.registerUser = async (req, res) => {
+  try {
+    const data = req.body;
+    
+    const userObj = {
+        name:data.name,
+        email:data.email,
+        phoneNumber:data.phoneNumber,
+        
+    }
+
+    const user = await UserModel.create(data);
+    if (!user) {
+      return res.status(400).json({ message: "User registration failed" });
+    }
+    await user.save();
+    return res
+      .status(201)
+      .json({ message: "User registered successfully", user });
+  } catch (error) {
+    console.error("User registration error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 exports.sendSMS = async (req, res) => {
   try {
@@ -39,41 +64,41 @@ exports.sendSMS = async (req, res) => {
   }
 };
 
-const verifyOTP = async (req, res) => {
-  try {
-    const { phone, otp } = req.body;
-    if (!phone || !otp) {
-      return res
-        .status(400)
-        .json({ message: "Phone number and OTP are required" });
-    }
-    const user = await UserModel.findOne({ phoneNumber: phone });
-    const token = jsonwebtoken.sign(
-      {
-        id: user._id,
-      },
-      "ierutioewhriot"
-    );
-    if (!user) {
-      return res.status(400).json({ message: "Invalid phone number" });
-    }
-    if (String(user.otp).trim() !== String(otp).trim()) {
-      return res.status(400).json({ message: "Invalid OTP" });
-    }
-    if (Date.now() > user.otpExpire) {
-      return res.status(400).json({ message: "OTP expired" });
-    }
-    await UserModel.updateOne(
-      { phoneNumber: phone },
-      { $unset: { otp: 1, otpExpire: 1 } }
-    );
-    return res
-      .status(200)
-      .json({ message: "OTP verified successfully", verified: true, token });
-  } catch (error) {
-    console.error("OTP verification error:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
-  }
-};
+// const verifyOTP = async (req, res) => {
+//     try {
+//       const { phone, otp } = req.body;
+//       if (!phone || !otp) {
+//         return res
+//           .status(400)
+//           .json({ message: "Phone number and OTP are required" });
+//       }
+//       const user = await UserModel.findOne({ phoneNumber: phone });
+//       const token = jsonwebtoken.sign(
+//         {
+//           id: user._id,
+//         },
+//         "ierutioewhriot"
+//       );
+//       if (!user) {
+//         return res.status(400).json({ message: "Invalid phone number" });
+//       }
+//       if (String(user.otp).trim() !== String(otp).trim()) {
+//         return res.status(400).json({ message: "Invalid OTP" });
+//       }
+//       if (Date.now() > user.otpExpire) {
+//         return res.status(400).json({ message: "OTP expired" });
+//       }
+//       await UserModel.updateOne(
+//         { phoneNumber: phone },
+//         { $unset: { otp: 1, otpExpire: 1 } }
+//       );
+//       return res
+//         .status(200)
+//         .json({ message: "OTP verified successfully", verified: true, token });
+//     } catch (error) {
+//       console.error("OTP verification error:", error);
+//       return res
+//         .status(500)
+//         .json({ message: "Internal server error", error: error.message });
+//     }
+//   };
