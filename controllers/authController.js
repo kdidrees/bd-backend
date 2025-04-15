@@ -17,7 +17,7 @@ exports.registerUser = async (req, res) => {
     }
 
     const otp = generateOTP();
-    const otpExpiry = Date.now() + 60 * 1000;
+    const otpExpiry = Date.now() + 60 * 60 * 1000;
 
     const response = await sendOTPViaSMS(phone, otp);
 
