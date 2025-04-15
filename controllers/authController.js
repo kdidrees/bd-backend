@@ -1,27 +1,24 @@
+const UserModel = require("../models/userModel");
+const generateOTP = require("../utils/otpUtils");
+const sendOTPViaSMS = require("../utils/smsUtils");
 
-
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-export const sendSMS = async (req, res) => {
+exports.sendSMS = async (req, res) => {
   try {
     const { phone } = req.body;
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
+
     const otp = generateOTP();
     const otpExpiry = Date.now() + 60 * 1000;
+
     let findUser = await UserModel.findOne({ phoneNumber: phone });
     if (!findUser) {
-      await UserModel.create({
-        phoneNumber: phone,
-        otp,
-        otpExpire: otpExpiry,
-      });
+      await UserModel.create({ phoneNumber: phone, otp, otpExpire: otpExpiry });
     }
-    const apiUrl = `https://sms.autobysms.com/app/smsapi/index.php?key=45FA150E7D83D8&campaign=0&routeid=9&type=text&contacts=${phone}&senderid=SMSSPT&msg=Your OTP is ${otp} SELECTIAL&template_id=1707166619134631839`;
-    const response = await axios.post(apiUrl);
+
+    const response = await sendOTPViaSMS(phone, otp);
+
     if (response.data.type === "SUCCESS") {
       await UserModel.findOneAndUpdate(
         { phoneNumber: phone },
@@ -42,7 +39,7 @@ export const sendSMS = async (req, res) => {
   }
 };
 
-export const verifyOTP = async (req, res) => {
+const verifyOTP = async (req, res) => {
   try {
     const { phone, otp } = req.body;
     if (!phone || !otp) {
