@@ -1,4 +1,5 @@
 const UserModel = require("../models/userModel");
+const UserProfileModel = require("../models/userProfileModel");
 const { generateOTP } = require("../utils/otpUtils");
 const sendOTPViaSMS = require("../utils/smsUtils");
 
@@ -74,6 +75,60 @@ exports.verifyOTP = async (req, res) => {
     return res
       .status(200)
       .json({ status: "success", message: "OTP verified successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.onboardUser = async (req, res) => {
+  try {
+    const {
+      phone,
+      name,
+      email,
+      age,
+      gender,
+      address,
+      state,
+      location,
+      bloodGroup,
+      longitude,
+      latitude,
+    } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+
+    const user = await UserModel.findOne({ phoneNumber: phone });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const userProfile = new UserProfileModel({
+      userId: user._id,
+      name,
+      email,
+      age,
+      gender,
+      address,
+      state,
+      location,
+      bloodGroup,
+      latitude,
+      longitude,
+    });
+
+    await userProfile.save();
+
+    await UserModel.findByIdAndUpdate(user._id, { isOnboarded: true });
+
+    return res.status(201).json({
+      status: "success",
+      message: "Onboarding completed successfully",
+      userProfile,
+    });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
