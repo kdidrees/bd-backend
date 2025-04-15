@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     otp: { type: String },
     otpExpire: { type: Number },
     onboardingCompleted: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

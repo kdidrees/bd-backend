@@ -4,43 +4,20 @@ const sendOTPViaSMS = require("../utils/smsUtils");
 
 exports.registerUser = async (req, res) => {
   try {
-    const data = req.body;
-    
-    const userObj = {
-        name:data.name,
-        email:data.email,
-        phoneNumber:data.phoneNumber,
-        
-    }
-
-    const user = await UserModel.create(data);
-    if (!user) {
-      return res.status(400).json({ message: "User registration failed" });
-    }
-    await user.save();
-    return res
-      .status(201)
-      .json({ message: "User registered successfully", user });
-  } catch (error) {
-    console.error("User registration error:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-exports.sendSMS = async (req, res) => {
-  try {
     const { phone } = req.body;
+
     if (!phone) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
+    const existingUser = await UserModel.findOne({ phoneNumber: phone });
+
+    if (existingUser) {
+      res.status(400).json({ message: "User already exists" });
+    }
+
     const otp = generateOTP();
     const otpExpiry = Date.now() + 60 * 1000;
-
-    let findUser = await UserModel.findOne({ phoneNumber: phone });
-    if (!findUser) {
-      await UserModel.create({ phoneNumber: phone, otp, otpExpire: otpExpiry });
-    }
 
     const response = await sendOTPViaSMS(phone, otp);
 
@@ -50,55 +27,54 @@ exports.sendSMS = async (req, res) => {
         { otp, otpExpire: otpExpiry },
         { upsert: true, new: true }
       );
-      return res.status(200).json({ message: "OTP sent successfully" });
+      return res.status(201).json({
+        status: "success",
+        message: "user registered and OTP sent successfully",
+      });
     } else {
-      return res
-        .status(500)
-        .json({ message: "Failed to send OTP", error: response.data });
+      return res.status(500).json({
+        status: "failed",
+        message: "Failed to send OTP",
+        error: response.data,
+      });
     }
   } catch (error) {
-    console.error("SMS sending error:", error);
-    return res
-      .status(500)
-      .json({ message: "Internal server error", error: error.message });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-// const verifyOTP = async (req, res) => {
-//     try {
-//       const { phone, otp } = req.body;
-//       if (!phone || !otp) {
-//         return res
-//           .status(400)
-//           .json({ message: "Phone number and OTP are required" });
-//       }
-//       const user = await UserModel.findOne({ phoneNumber: phone });
-//       const token = jsonwebtoken.sign(
-//         {
-//           id: user._id,
-//         },
-//         "ierutioewhriot"
-//       );
-//       if (!user) {
-//         return res.status(400).json({ message: "Invalid phone number" });
-//       }
-//       if (String(user.otp).trim() !== String(otp).trim()) {
-//         return res.status(400).json({ message: "Invalid OTP" });
-//       }
-//       if (Date.now() > user.otpExpire) {
-//         return res.status(400).json({ message: "OTP expired" });
-//       }
-//       await UserModel.updateOne(
-//         { phoneNumber: phone },
-//         { $unset: { otp: 1, otpExpire: 1 } }
-//       );
-//       return res
-//         .status(200)
-//         .json({ message: "OTP verified successfully", verified: true, token });
-//     } catch (error) {
-//       console.error("OTP verification error:", error);
-//       return res
-//         .status(500)
-//         .json({ message: "Internal server error", error: error.message });
-//     }
-//   };
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!phone || !otp) {
+      return res
+        .status(400)
+        .json({ message: "Phone number and OTP are required" });
+    }
+
+    const user = await UserModel.findOne({ phoneNumber: phone });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+    if (user.otpExpire < Date.now()) {
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    user.otp = null;
+    user.otpExpire = null;
+    user.isVerified = true;
+
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ status: "success", message: "OTP verified successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
