@@ -2,14 +2,14 @@ const donorModel = require("../models/donorModel");
 
 exports.addDonor = async (req, res) => {
   try {
-    const { name, phoneNumber, bloodGroup, location } = req.body;
+    const { user, phoneNumber, bloodGroup, location } = req.body;
 
-    if (!name || !phoneNumber || !bloodGroup || !location) {
+    if (!user || !phoneNumber || !bloodGroup || !location) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const newDonor = new donorModel({
-      name,
+      user,
       phoneNumber,
       bloodGroup,
       location,

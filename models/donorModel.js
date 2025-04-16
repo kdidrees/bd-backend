@@ -2,27 +2,10 @@ const mongoose = require("mongoose");
 
 const DonorSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    phoneNumber: {
-      type: String,
-      required: true,
-      trim: true,
-      unique: true,
-    },
-    bloodGroup: {
-      type: String,
-      required: true,
-      enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"],
-    },
-    location: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    user: { type: String, required: true, ref: "User" },
+    PhoneNumber: { type: String, required: true },
+    bloodGroup: { type: String, required: true },
+    location: { type: String, required: true },
   },
   {
     timestamps: true,
