@@ -6,6 +6,7 @@ const DonorSchema = new mongoose.Schema(
     PhoneNumber: { type: String, required: true },
     bloodGroup: { type: String, required: true },
     location: { type: String, required: true },
+    bloodQuantity: { type: String, required: true },
   },
   {
     timestamps: true,

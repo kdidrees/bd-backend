@@ -2,7 +2,7 @@ const donorModel = require("../models/donorModel");
 
 exports.addDonor = async (req, res) => {
   try {
-    const { user, phoneNumber, bloodGroup, location } = req.body;
+    const { user, phoneNumber, bloodGroup, location, quantity } = req.body;
 
     if (!user || !phoneNumber || !bloodGroup || !location) {
       return res.status(400).json({ message: "All fields are required" });
@@ -13,6 +13,7 @@ exports.addDonor = async (req, res) => {
       phoneNumber,
       bloodGroup,
       location,
+      bloodQuantity: quantity,
     });
 
     await newDonor.save();
@@ -33,13 +34,11 @@ exports.getDonors = async (req, res) => {
         .status(404)
         .json({ status: "failed", message: "No donors found" });
     }
-    res
-      .status(200)
-      .json({
-        status: "success",
-        message: "Donors fetched successfully",
-        donors,
-      });
+    res.status(200).json({
+      status: "success",
+      message: "Donors fetched successfully",
+      donors,
+    });
   } catch (error) {
     res
       .status(500)
