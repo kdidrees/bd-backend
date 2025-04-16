@@ -15,6 +15,7 @@ exports.addBloodRequest = async (req, res) => {
       bloodGroup,
       location,
       quantity,
+      status: "pending",
     });
 
     await newRequest.save();
