@@ -74,3 +74,18 @@ exports.requestDonor = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getAllrequests = async (req, res) => {
+    try {
+        const requests = await donorModel.find({}).populate("user");
+    
+        if (requests.length === 0) {
+        return res.status(404).json({ message: "No requests found" });
+        }
+    
+        res.status(200).json({ message: "Requests fetched successfully", requests });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
