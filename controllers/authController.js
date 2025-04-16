@@ -13,12 +13,49 @@ exports.registerUser = async (req, res) => {
 
     const existingUser = await UserModel.findOne({ phoneNumber: phone });
 
+    // if (existingUser) {
+    //   return res.status(400).json({ message: "User already exists" });
+    // }
+
     if (existingUser) {
-      res.status(400).json({ message: "User already exists" });
+      const isOTPExpired =
+        !existingUser.otpExpire || existingUser.otpExpire < Date.now();
+
+      if (!isOTPExpired) {
+        return res
+          .status(400)
+          .json({ message: "User already exists and OTP is still valid" });
+      }
+
+      const otp = generateOTP();
+      const otpExpiry = Date.now() + 60 * 1000;
+
+      // OTP is expired, send a new one
+      const response = await sendOTPViaSMS(phone, otp);
+
+      if (response.data.type === "SUCCESS") {
+        await UserModel.findOneAndUpdate(
+          { phoneNumber: phone },
+          { otp, otpExpire: otpExpiry },
+          { new: true }
+        );
+        return res.status(200).json({
+          status: "success",
+          message: "OTP expired earlier. New OTP sent successfully",
+        });
+      } else {
+        return res.status(500).json({
+          status: "failed",
+          message: "Failed to send OTP",
+          error: response.data,
+        });
+      }
     }
 
+    // New user - send OTP and create re
+
     const otp = generateOTP();
-    const otpExpiry = Date.now() + 60 * 60 * 1000;
+    const otpExpiry = Date.now() +  60 * 1000;
 
     const response = await sendOTPViaSMS(phone, otp);
 
@@ -79,7 +116,6 @@ exports.verifyOTP = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 exports.onboardUser = async (req, res) => {
   try {
