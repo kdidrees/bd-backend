@@ -6,13 +6,13 @@ const jwt = require("jsonwebtoken");
 
 exports.registerUser = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phoneNumber } = req.body;
 
-    if (!phone) {
+    if (!phoneNumber) {
       return res.status(400).json({ message: "Phone number is required" });
     }
 
-    const existingUser = await UserModel.findOne({ phoneNumber: phone });
+    const existingUser = await UserModel.findOne({ phoneNumber });
 
     // if (existingUser) {
     //   return res.status(400).json({ message: "User already exists" });
@@ -32,11 +32,11 @@ exports.registerUser = async (req, res) => {
       const otpExpiry = Date.now() + 60 * 1000;
 
       // OTP is expired, send a new one
-      const response = await sendOTPViaSMS(phone, otp);
+      const response = await sendOTPViaSMS(phoneNumber, otp);
 
       if (response.data.type === "SUCCESS") {
         await UserModel.findOneAndUpdate(
-          { phoneNumber: phone },
+          { phoneNumber },
           { otp, otpExpire: otpExpiry },
           { new: true }
         );
@@ -58,11 +58,11 @@ exports.registerUser = async (req, res) => {
     const otp = generateOTP();
     const otpExpiry = Date.now() + 60 * 1000;
 
-    const response = await sendOTPViaSMS(phone, otp);
+    const response = await sendOTPViaSMS(phoneNumber, otp);
 
     if (response.data.type === "SUCCESS") {
       await UserModel.findOneAndUpdate(
-        { phoneNumber: phone },
+        { phoneNumber },
         { otp, otpExpire: otpExpiry },
         { upsert: true, new: true }
       );
