@@ -2,6 +2,7 @@ const UserModel = require("../models/userModel");
 const UserProfileModel = require("../models/userProfileModel");
 const { generateOTP } = require("../utils/otpUtils");
 const sendOTPViaSMS = require("../utils/smsUtils");
+const jwt = require("jsonwebtoken");
 
 exports.registerUser = async (req, res) => {
   try {
@@ -55,7 +56,7 @@ exports.registerUser = async (req, res) => {
     // New user - send OTP and create re
 
     const otp = generateOTP();
-    const otpExpiry = Date.now() +  60 * 1000;
+    const otpExpiry = Date.now() + 60 * 1000;
 
     const response = await sendOTPViaSMS(phone, otp);
 
@@ -109,9 +110,26 @@ exports.verifyOTP = async (req, res) => {
 
     await user.save();
 
-    return res
-      .status(200)
-      .json({ status: "success", message: "OTP verified successfully" });
+    // generate a jwt token
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        phoneNumber: user.phoneNumber,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRY || "7d" }
+    );
+
+    return res.status(200).json({
+      status: "success",
+      message: "OTP verified successfully",
+      token,
+      user: {
+        _id: user._id,
+        phoneNumber: user.phoneNumber,
+        isVerified: user.isVerified,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
   }
