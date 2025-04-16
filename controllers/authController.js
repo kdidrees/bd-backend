@@ -123,7 +123,7 @@ exports.onboardUser = async (req, res) => {
 
     await userProfile.save();
 
-    await UserModel.findByIdAndUpdate(user._id, { isOnboarded: true });
+    await UserModel.findByIdAndUpdate(user._id, { onboardingCompleted: true });
 
     return res.status(201).json({
       status: "success",
