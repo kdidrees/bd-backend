@@ -29,7 +29,7 @@ exports.registerUser = async (req, res) => {
       }
 
       const otp = generateOTP();
-      const otpExpiry = Date.now() + 60 * 1000;
+      const otpExpiry = Date.now() + 60 * 60 * 1000;
 
       // OTP is expired, send a new one
       const response = await sendOTPViaSMS(phoneNumber, otp);
@@ -56,7 +56,7 @@ exports.registerUser = async (req, res) => {
     // New user - send OTP and create re
 
     const otp = generateOTP();
-    const otpExpiry = Date.now() + 60 * 1000;
+    const otpExpiry = Date.now() + 60 * 60 * 1000;
 
     const response = await sendOTPViaSMS(phoneNumber, otp);
 
@@ -188,5 +188,3 @@ exports.onboardUser = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
-
