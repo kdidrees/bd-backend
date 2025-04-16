@@ -80,6 +80,7 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
+
 exports.onboardUser = async (req, res) => {
   try {
     const {
