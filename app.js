@@ -17,8 +17,10 @@ app.use(cors(corsOptions));
 
 // import routes
 const authRoutes = require("./routes/authRoutes");
+const donorRoutes = require("./routes/donorRoutes");
 
 // use routes
 app.use("/api/auth", authRoutes);
+app.use("/api/donor", donorRoutes);
 
 module.exports = app;

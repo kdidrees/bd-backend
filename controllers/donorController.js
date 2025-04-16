@@ -24,3 +24,25 @@ exports.addDonor = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.getDonors = async (req, res) => {
+  try {
+    const donors = await donorModel.find().populate("user", "phoneNumber");
+    if (!donors) {
+      return res
+        .status(404)
+        .json({ status: "failed", message: "No donors found" });
+    }
+    res
+      .status(200)
+      .json({
+        status: "success",
+        message: "Donors fetched successfully",
+        donors,
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ status: "failed", message: "Internal server error" });
+  }
+};
