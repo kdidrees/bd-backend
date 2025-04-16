@@ -7,5 +7,4 @@ const { addDonor, getDonors } = require("../controllers/donorController");
 router.post("/add-donor", addDonor);
 router.get("/get-donors", getDonors);
 
-
 module.exports = router;
