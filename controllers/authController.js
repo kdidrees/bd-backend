@@ -151,8 +151,15 @@ exports.onboardUser = async (req, res) => {
       latitude,
     } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ message: "Phone number is required" });
+    if (
+      !phone ||
+      !location ||
+      !bloodGroup ||
+      !address ||
+      !longitude ||
+      !latitude
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     const user = await UserModel.findOne({ phoneNumber: phone });
