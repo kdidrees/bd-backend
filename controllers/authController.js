@@ -136,9 +136,9 @@ exports.verifyOTP = async (req, res) => {
 };
 
 exports.onboardUser = async (req, res) => {
+  const userId = req.user.userId;
   try {
     const {
-      phone,
       name,
       email,
       age,
@@ -151,18 +151,11 @@ exports.onboardUser = async (req, res) => {
       latitude,
     } = req.body;
 
-    if (
-      !phone ||
-      !location ||
-      !bloodGroup ||
-      !address ||
-      !longitude ||
-      !latitude
-    ) {
+    if (!location || !bloodGroup || !address || !longitude || !latitude) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const user = await UserModel.findOne({ phoneNumber: phone });
+    const user = await UserModel.findOne({ _id: userId });
 
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -193,5 +186,63 @@ exports.onboardUser = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.verifyToken = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.StartsWith("Bearer")) {
+      return res.status(401).json({
+        status: "failed",
+        message: "Unauthorized, Token not found",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+  } catch (error) {
+    return res.status(401).json({
+      status: "failed",
+      message: " Token expired or invalid",
+    });
+  }
+};
+
+exports.saveLocation = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const { latitude, longitude, address } = req.body;
+
+    if (!latitude || !longitude || !address) {
+      return res
+        .status(400)
+        .json({ status: "failed", message: "All fields are required" });
+    }
+
+    const user = await UserProfileModel.findOne({ userId });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ status: "failed", message: "User not found" });
+    }
+
+    user.latitude = latitude;
+    user.longitude = longitude;
+    user.address = address;
+    await user.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Location saved successfully",
+      data: user,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ status: "failed", message: "Internal server error" });
   }
 };
