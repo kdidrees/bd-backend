@@ -23,6 +23,6 @@ const bloodRequestRoutes = require("./routes/bloodrequestRoute");
 // use routes
 app.use("/api/auth", authRoutes);
 app.use("/api/donor", donorRoutes);
-app.use("/api/bloodRequest", bloodRequestRoutes);  
+app.use("/api/blood-request", bloodRequestRoutes);  
 
 module.exports = app;
