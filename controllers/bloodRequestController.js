@@ -7,7 +7,7 @@ exports.addBloodRequest = async (req, res) => {
 
     if (!userId || !donorId || !bloodGroup || !location || !quantity) {
       return res.status(400).json({ message: "All fields are required" });
-    }
+    } 
 
     const existingRequests = await BloodRequestModel.findOne({
       user: userId,
@@ -19,7 +19,7 @@ exports.addBloodRequest = async (req, res) => {
         $match: {
           user: userId,
           donorId: donorId,
-          status: "pending",
+          // status: "pending",
         },
       },
       {
