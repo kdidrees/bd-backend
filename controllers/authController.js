@@ -246,3 +246,54 @@ exports.saveLocation = async (req, res) => {
       .json({ status: "failed", message: "Internal server error" });
   }
 };
+
+exports.resendOTP = async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res
+        .status(400)
+        .json({ status: "success", message: "Phone number is required" });
+    }
+
+    const user = await UserModel.findOne({ phoneNumber });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ status: "failed", message: "User not found" });
+    }
+
+    const isOTPExpired = user.otpExpire < Date.now();
+    if (!isOTPExpired) {
+      return res
+        .status(400)
+        .json({ status: "failed", message: "OTP is still valid" });
+    }
+
+    const otp = generateOTP();
+    const otpExpiry = Date.now() + 60 * 60 * 1000;
+
+    const response = await sendOTPViaSMS(phoneNumber, otp);
+
+    if (response.data.type === "SUCCESS") {
+      user.otp = otp;
+      user.otpExpire = otpExpiry;
+      await user.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "OTP resent successfully",
+      });
+    } else {
+      return res.status(500).json({
+        status: "failed",
+        message: "Failed to send OTP",
+        error: response.data,
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
