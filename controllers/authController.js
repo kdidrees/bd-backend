@@ -24,7 +24,7 @@ exports.registerUser = async (req, res) => {
 
       if (!isOTPExpired) {
         return res
-          .status(400)
+          .status(409)
           .json({ message: "User already exists and OTP is still valid" });
       }
 
