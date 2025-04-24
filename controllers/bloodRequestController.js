@@ -3,7 +3,8 @@ const userModel = require("../models/userModel");
 
 exports.addBloodRequest = async (req, res) => {
   try {
-    const { userId, donorId, bloodGroup, location, quantity } = req.body;
+    const userId = req.userId;
+    const { donorId, bloodGroup, location, quantity } = req.body;
 
     if (!userId || !donorId || !bloodGroup || !location || !quantity) {
       return res.status(400).json({ message: "All fields are required" });
@@ -30,7 +31,7 @@ exports.addBloodRequest = async (req, res) => {
 
 exports.getBloodRequests = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(400).json({ message: "User ID is required" });
