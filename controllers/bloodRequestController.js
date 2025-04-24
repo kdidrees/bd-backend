@@ -52,3 +52,28 @@ exports.getBloodRequests = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.updateBloodRequestStatus = async (req, res) => {
+  try {
+    const { requestId, status } = req.body;
+
+    if (!requestId || !status) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    const request = await BloodRequestModel.findById(requestId);
+    if (!request) {
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    request.status = status;
+    await request.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Request status updated successfully",
+      request,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
